@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Para papá</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=Jost:wght@200;300;400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --bg:#08080f;
+  --surface:rgba(255,255,255,0.03);
+  --border:rgba(212,185,140,0.18);
+  --gold:#c9a55a;
+  --gold-light:#e8cfa0;
+  --cream:#f0e8d5;
+  --muted:rgba(240,232,213,0.5);
+  --dim:rgba(240,232,213,0.3);
+}
+
+html,body{
+  position:fixed;width:100%;height:100%;
+  overflow:hidden;
+  background:var(--bg);
+  font-family:'Jost',sans-serif;
+  color:var(--cream);
+  -webkit-tap-highlight-color:transparent;
+}
+
+#stars{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+.nebula{
+  position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:
+    radial-gradient(ellipse 70% 50% at 15% 25%,rgba(90,55,160,0.12) 0%,transparent 70%),
+    radial-gradient(ellipse 60% 40% at 85% 80%,rgba(40,80,140,0.1) 0%,transparent 70%),
+    radial-gradient(ellipse 40% 40% at 60% 10%,rgba(160,100,40,0.06) 0%,transparent 60%);
+}
+
+.prog{position:fixed;top:0;left:0;width:100%;height:1.5px;z-index:200;background:rgba(255,255,255,0.04)}
+.prog-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--gold),var(--gold-light));transition:width .7s cubic-bezier(.4,0,.2,1);border-radius:0 2px 2px 0}
+
+/* ── ESCENAS ── */
+.stage{position:fixed;inset:0;z-index:10}
+.scene{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:2.5rem 1.5rem 6rem;
+  opacity:0;visibility:hidden;
+  transition:opacity .85s cubic-bezier(.4,0,.2,1),visibility .85s;
+  pointer-events:none;
+}
+.scene.on{opacity:1;visibility:visible;pointer-events:auto}
+.scene.on .anim{animation:rise .95s cubic-bezier(.23,1,.32,1) forwards}
+@keyframes rise{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+
+.wrap{max-width:560px;width:100%;margin:0 auto}
+
+/* ── TEXTO ── */
+.narr{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(1.55rem,4.5vw,2.1rem);
+  font-style:italic;font-weight:400;
+  line-height:1.55;color:var(--cream);text-align:center;
+}
+.sub{
+  font-size:clamp(.72rem,2vw,.82rem);font-weight:300;
+  letter-spacing:.22em;text-transform:uppercase;
+  color:var(--gold);text-align:center;margin-top:1.1rem;
+}
+.rule{width:40px;height:1px;background:var(--gold);opacity:.35;margin:1.4rem auto}
+
+/* ── CARD MENSAJE ── */
+.card{
+  display:flex;align-items:stretch;
+  background:var(--surface);
+  border:0.5px solid var(--border);
+  border-radius:16px;overflow:hidden;
+}
+.card.flip{flex-direction:row-reverse}
+
+.foto-col{
+  flex-shrink:0;width:120px;
+  background:rgba(255,255,255,0.025);
+  overflow:hidden;
+}
+.foto-col img{width:100%;height:100%;object-fit:cover;object-position:center top;display:block}
+
+.msg-col{
+  flex:1;
+  padding:1.5rem 1.4rem;
+  display:flex;flex-direction:column;justify-content:center;
+  overflow-y:auto;
+  max-height:min(58vh,380px);
+  -webkit-overflow-scrolling:touch;
+}
+.msg-col::-webkit-scrollbar{width:2px}
+.msg-col::-webkit-scrollbar-track{background:transparent}
+.msg-col::-webkit-scrollbar-thumb{background:rgba(201,165,90,.25);border-radius:2px}
+
+.msg-txt{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(1rem,2.8vw,1.25rem);
+  font-style:italic;font-weight:400;
+  line-height:1.7;color:var(--cream);
+}
+.msg-firma{
+  font-size:.7rem;font-weight:300;
+  letter-spacing:.2em;text-transform:uppercase;
+  color:var(--gold);margin-top:1.1rem;flex-shrink:0;
+}
+
+.card.hero{border-color:rgba(212,185,140,0.38);background:rgba(201,165,90,0.05)}
+.card.hero .msg-txt{font-size:clamp(1rem,2.8vw,1.25rem)}
+
+/* ── FOTO FAMILIAR landscape 4:3 (720×540) ── */
+.fam-frame{
+  width:100%;max-width:340px;aspect-ratio:4/3;
+  border-radius:14px;overflow:hidden;
+  border:0.5px solid var(--border);
+  margin:0 auto 1.8rem;
+}
+.fam-frame img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* ── BANDA HIJOS (1186×1599 ≈ 3:4, crop panorámico) ── */
+.strip{
+  margin-top:.9rem;border-radius:10px;overflow:hidden;
+  border:0.5px solid var(--border);
+  width:100%;height:clamp(100px,24vw,140px);
+}
+.strip img{width:100%;height:100%;object-fit:cover;object-position:center 25%;display:block}
+
+/* ══════════════════════════════
+   ÁLBUM AUTOMÁTICO
+══════════════════════════════ */
+.scene-album{padding:0!important}
+
+.album-shell{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:0;
+  pointer-events:none;
+}
+
+.album-frame{
+  position:relative;
+  width:min(255px,63vw);
+  height:min(355px,71vh);
+  flex-shrink:0;
+}
+
+.al-photo{
+  position:absolute;inset:0;
+  border-radius:12px;overflow:hidden;
+  border:0.5px solid var(--border);
+  opacity:0;
+  transition:opacity .9s cubic-bezier(.4,0,.2,1),transform .9s cubic-bezier(.4,0,.2,1);
+  transform:scale(.96) translateY(8px);
+}
+.al-photo.visible{opacity:1;transform:scale(1) translateY(0)}
+.al-photo.out{opacity:0;transform:scale(1.03) translateY(-6px)}
+.al-photo img{width:100%;height:100%;object-fit:cover;object-position:center top;display:block}
+
+.album-prog-bar{
+  width:min(255px,63vw);
+  height:2px;background:rgba(255,255,255,0.07);
+  border-radius:2px;margin-top:1.1rem;overflow:hidden;flex-shrink:0;
+}
+.album-prog-inner{height:100%;background:var(--gold);border-radius:2px;width:0%}
+
+.album-meta{
+  display:flex;align-items:center;justify-content:space-between;
+  width:min(255px,63vw);margin-top:.55rem;flex-shrink:0;
+}
+.album-num{
+  font-size:.62rem;font-weight:300;
+  letter-spacing:.2em;text-transform:uppercase;color:var(--gold);opacity:.55;
+}
+.album-label{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(.78rem,2.2vw,.95rem);
+  font-style:italic;color:var(--muted);
+  opacity:0;transition:opacity .6s ease;text-align:right;
+}
+.album-label.show{opacity:1}
+
+.album-end-btn{
+  margin-top:1.6rem;flex-shrink:0;
+  background:rgba(201,165,90,.12);
+  border:0.5px solid rgba(201,165,90,.4);
+  color:var(--cream);
+  padding:.82rem 2.6rem;
+  font-family:'Jost',sans-serif;font-size:.74rem;
+  font-weight:300;letter-spacing:.22em;text-transform:uppercase;
+  border-radius:100px;cursor:pointer;
+  transition:opacity .5s ease, background .3s ease;
+  backdrop-filter:blur(8px);
+  opacity:0;pointer-events:none;
+}
+.album-end-btn.ready{opacity:1;pointer-events:auto}
+.album-end-btn:hover{background:rgba(201,165,90,.22);color:var(--gold-light)}
+.album-end-btn:active{transform:scale(.97)}
+
+/* ── CIERRE ── */
+.cierre-title{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(2.2rem,7vw,3.2rem);
+  font-weight:400;line-height:1.15;
+  text-align:center;color:var(--cream);
+}
+.cierre-title em{color:var(--gold);font-style:italic}
+.chips{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;margin-top:1.4rem}
+.chip{
+  font-size:.66rem;font-weight:300;
+  letter-spacing:.18em;text-transform:uppercase;
+  color:var(--gold);
+  background:rgba(201,165,90,.1);
+  border:0.5px solid rgba(201,165,90,.28);
+  border-radius:40px;padding:.3rem .9rem;
+}
+
+/* ── NAV ── */
+.nav{
+  position:fixed;bottom:0;left:0;width:100%;
+  display:flex;flex-direction:column;align-items:center;
+  padding:.8rem 1.5rem 1.4rem;z-index:100;
+  background:linear-gradient(to top,rgba(8,8,15,.9) 50%,transparent);
+  transition:opacity .5s ease;
+}
+.nav.hidden{opacity:0;pointer-events:none}
+.btn{
+  background:rgba(201,165,90,.1);
+  border:0.5px solid rgba(201,165,90,.4);
+  color:var(--cream);
+  padding:.82rem 2.6rem;
+  font-family:'Jost',sans-serif;font-size:.74rem;
+  font-weight:300;letter-spacing:.22em;text-transform:uppercase;
+  border-radius:100px;cursor:pointer;
+  transition:all .3s ease;backdrop-filter:blur(8px);
+}
+.btn:hover{background:rgba(201,165,90,.2);border-color:rgba(201,165,90,.65);color:var(--gold-light)}
+.btn:active{transform:scale(.97)}
+.btn.hide{opacity:0;pointer-events:none}
+.hint-txt{
+  font-size:.58rem;font-weight:300;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--dim);opacity:.4;
+  margin-top:.5rem;pointer-events:none;
+}
+
+@media(max-width:480px){
+  .foto-col{width:100px}
+  .fam-frame{max-width:270px}
+  .album-frame{width:min(230px,70vw);height:min(310px,68vh)}
+  .album-prog-bar,.album-meta{width:min(230px,70vw)}
+}
+@media(max-width:360px){
+  .foto-col{width:88px}
+}
+</style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+<div class="nebula"></div>
+<div class="prog"><div class="prog-fill" id="pf"></div></div>
+
+<div class="stage" id="stage">
+
+  <!-- 1 · INTRO -->
+  <div class="scene on" id="s1">
+    <div class="wrap anim" style="text-align:center">
+      <p class="narr">Hay personas que sin buscarlo<br>se convierten en el centro<br>de todo lo que somos.</p>
+      <div class="rule"></div>
+      <p class="sub">hoy queremos recordártelo</p>
+    </div>
+  </div>
+
+  <!-- 2 · FOTO FAMILIAR — 720×540 landscape 4:3 -->
+  <div class="scene" id="s2">
+    <div class="wrap anim" style="text-align:center">
+      <div class="fam-frame">
+        <img src="Foto_Familiar.jpeg" alt="Familia">
+      </div>
+      <p class="narr" style="font-size:clamp(1.1rem,3vw,1.5rem)">Cuatro corazones<br>que laten juntos.</p>
+    </div>
+  </div>
+
+  <!-- 3 · LORENA — foto derecha (476×960 portrait ~1:2) -->
+  <div class="scene" id="s3">
+    <div class="wrap anim">
+      <div class="card">
+        <div class="msg-col">
+          <p class="msg-txt">Amor, le pido a Dios que nos regale muchísimos años más juntos y sobre todo mucha salud para poder disfrutarlos a tu lado. Eres mi gran compañero y me hace muy feliz ver la familia que hemos formado. Gracias por estar siempre para nosotros; te amo con todo mi corazón hoy y siempre.</p>
+          <p class="msg-firma">— Lorena</p>
+        </div>
+        <div class="foto-col" style="width:105px">
+          <img src="Foto_Lorena.jpeg" alt="Lorena">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4 · EDUARDO — foto izquierda (1200×1600 portrait 3:4) -->
+  <div class="scene" id="s4">
+    <div class="wrap anim">
+      <div class="card flip">
+        <div class="msg-col">
+          <p class="msg-txt">Papá, estoy muy orgulloso de ti. No solo por lo que me diste o me enseñaste, sino por todo aquello que tú no tuviste y luchaste para que a mí nunca me faltara. Gracias por ser ese puente hacia un futuro mejor; hoy valoro cada sacrificio que hiciste por nosotros. Te quiero muchísimo.</p>
+          <p class="msg-firma">— Eduardo</p>
+        </div>
+        <div class="foto-col">
+          <img src="Foto_Eduardo.jpeg" alt="Eduardo">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5 · ALAN — foto derecha (728×1296) + banda hijos (1186×1599) -->
+  <div class="scene" id="s5">
+    <div class="wrap anim">
+      <div class="card hero">
+        <div class="msg-col">
+          <p class="msg-txt">Papá, no siempre sé cómo expresarlo, pero te quiero más de lo que imaginas. Gracias por todo lo que haces en silencio por mí; aunque no lo digas, me doy cuenta de cada uno de tus sacrificios. Soy quien soy gracias a tu ejemplo y me llena de orgullo decir que eres mi papá. No te cambiaría por nada.</p>
+          <p class="msg-firma" style="color:var(--gold-light)">— Alan</p>
+        </div>
+        <div class="foto-col" style="border-left:0.5px solid rgba(212,185,140,0.28)">
+          <img src="Foto_Alan.jpeg" alt="Alan">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6 · ÁLBUM AUTOMÁTICO — 8 fotos, sin skip posible -->
+  <div class="scene scene-album" id="s6">
+    <div class="album-shell" id="albumShell">
+      <div class="album-frame" id="albumFrame"></div>
+      <div class="album-prog-bar"><div class="album-prog-inner" id="albumProgInner"></div></div>
+      <div class="album-meta">
+        <div class="album-num" id="albumNum">1 / 8</div>
+        <div class="album-label" id="albumLabel"></div>
+      </div>
+      <button class="album-end-btn" id="albumEndBtn">Continuar al cierre</button>
+    </div>
+  </div>
+
+  <!-- 7 · CIERRE -->
+  <div class="scene" id="s7">
+    <div class="wrap anim" style="text-align:center">
+      <p class="narr" style="font-size:clamp(1rem,2.8vw,1.3rem);margin-bottom:.3rem">Somos tres que tuvieron la suerte</p>
+      <p class="narr" style="font-size:clamp(1rem,2.8vw,1.3rem);margin-bottom:1.4rem">de tenerte.</p>
+      <div class="rule"></div>
+      <p class="cierre-title">Feliz cumpleaños,<br><em>papá</em>&nbsp;🎂</p>
+      <div class="chips">
+        <span class="chip">Lorena</span>
+        <span class="chip">Eduardo</span>
+        <span class="chip">Alan</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="nav" id="nav">
+  <button class="btn" id="btnNext">Continuar</button>
+  <span class="hint-txt">o toca la pantalla</span>
+</div>
+
+<script>
+(function(){"use strict";
+
+/* ── ESTRELLAS ── */
+const cvs=document.getElementById('stars');
+const cx=cvs.getContext('2d');
+let W,H,pts=[];
+function initS(){
+  W=cvs.width=window.innerWidth;
+  H=cvs.height=window.innerHeight;
+  pts=Array.from({length:90},()=>({
+    x:Math.random()*W,y:Math.random()*H,
+    r:Math.random()*.85+.15,
+    a:Math.random()*.55+.05,
+    da:(Math.random()*.004+.001)*(Math.random()<.5?1:-1)
+  }));
+}
+function drawS(){
+  cx.clearRect(0,0,W,H);
+  pts.forEach(p=>{
+    p.a+=p.da;if(p.a<=.05||p.a>=.68)p.da*=-1;
+    cx.beginPath();cx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    cx.fillStyle=`rgba(240,232,213,${p.a})`;cx.fill();
+  });
+  requestAnimationFrame(drawS);
+}
+initS();window.addEventListener('resize',initS);drawS();
+
+/* ══════════════════════════════════
+   ÁLBUM
+══════════════════════════════════ */
+const ALBUM=[
+  {src:'Album_1.jpeg', label:'Cada momento contigo…'},
+  {src:'Album_2.jpeg', label:'…es un tesoro guardado.'},
+  {src:'Album_3.jpeg', label:'Reímos sin razón…'},
+  {src:'Album_4.jpeg', label:'…y eso lo dice todo.'},
+  {src:'Album_5.jpeg', label:'Eres parte de nosotros…'},
+  {src:'Album_6.jpeg', label:'…en cada recuerdo.'},
+  {src:'Album_7.jpeg', label:'Gracias por existir…'},
+  {src:'Album_8.jpeg', label:'…papá.'},
+];
+
+const PHOTO_MS = 2800;
+
+const albumFrame   = document.getElementById('albumFrame');
+const progInner    = document.getElementById('albumProgInner');
+const albumNumEl   = document.getElementById('albumNum');
+const albumLabelEl = document.getElementById('albumLabel');
+const albumEndBtn  = document.getElementById('albumEndBtn');
+
+/* construir fotos */
+const photoEls = ALBUM.map((f,i)=>{
+  const d = document.createElement('div');
+  d.className = 'al-photo';
+  d.style.zIndex = String(ALBUM.length - i);
+  const img = document.createElement('img');
+  img.src = f.src;
+  img.alt = '';
+  img.loading = 'lazy';
+  d.appendChild(img);
+  albumFrame.appendChild(d);
+  return d;
+});
+
+let aIdx = 0;
+let progRAF = null;
+let progStart = null;
+let albumRunning = false;
+
+function animProg(duration, onDone){
+  cancelAnimationFrame(progRAF);
+  progInner.style.transition = 'none';
+  progInner.style.width = '0%';
+  progStart = performance.now();
+  (function tick(now){
+    const pct = Math.min((now - progStart) / duration * 100, 100);
+    progInner.style.width = pct + '%';
+    if(pct < 100 && albumRunning){ progRAF = requestAnimationFrame(tick); }
+    else if(pct >= 100 && albumRunning){ onDone && onDone(); }
+  })(performance.now());
+}
+
+function showSlide(idx){
+  /* salida del anterior */
+  if(idx > 0){
+    photoEls[idx-1].classList.remove('visible');
+    photoEls[idx-1].classList.add('out');
+  }
+  /* entrada del actual */
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      photoEls[idx].classList.add('visible');
+    });
+  });
+
+  albumNumEl.textContent = `${idx+1} / ${ALBUM.length}`;
+
+  /* etiqueta */
+  albumLabelEl.classList.remove('show');
+  setTimeout(()=>{
+    albumLabelEl.textContent = ALBUM[idx].label;
+    albumLabelEl.classList.add('show');
+  }, 350);
+
+  /* barra → siguiente */
+  animProg(PHOTO_MS, ()=>{
+    aIdx++;
+    if(aIdx < ALBUM.length){
+      showSlide(aIdx);
+    } else {
+      /* FIN — mostrar botón */
+      albumEndBtn.classList.add('ready');
+      albumLabelEl.textContent = 'Un año más junto a nosotros.';
+      albumNumEl.textContent = '';
+      progInner.style.width = '100%';
+    }
+  });
+}
+
+function startAlbum(){
+  albumRunning = true;
+  aIdx = 0;
+  albumEndBtn.classList.remove('ready');
+  albumLabelEl.classList.remove('show');
+  albumLabelEl.textContent = '';
+  albumNumEl.textContent = '1 / 8';
+  progInner.style.width = '0%';
+  photoEls.forEach(el=>{ el.classList.remove('visible'); el.classList.remove('out'); });
+  setTimeout(()=>showSlide(0), 700);
+}
+
+function stopAlbum(){
+  albumRunning = false;
+  cancelAnimationFrame(progRAF);
+}
+
+albumEndBtn.addEventListener('click', ()=>goTo(7));
+
+/* ── ESCENAS ── */
+const TOTAL = 7;
+let cur = 1;
+const scenes = Array.from({length:TOTAL},(_,i)=>document.getElementById('s'+(i+1)));
+const pf  = document.getElementById('pf');
+const btn = document.getElementById('btnNext');
+const nav = document.getElementById('nav');
+
+function goTo(n){
+  if(n < 1 || n > TOTAL) return;
+  if(cur === 6) stopAlbum();
+  scenes[cur-1].classList.remove('on');
+  cur = n;
+  scenes[cur-1].classList.add('on');
+  pf.style.width = ((cur/TOTAL)*100) + '%';
+
+  if(cur === 6){
+    nav.classList.add('hidden');
+    startAlbum();
+  } else {
+    nav.classList.remove('hidden');
+    btn.classList.toggle('hide', cur === TOTAL);
+  }
+}
+
+btn.addEventListener('click', e=>{ e.stopPropagation(); if(cur < TOTAL) goTo(cur+1); });
+
+document.getElementById('stage').addEventListener('click', e=>{
+  if(cur === 6) return;
+  if(e.target.closest('.btn')) return;
+  if(cur < TOTAL) goTo(cur+1);
+});
+
+window.addEventListener('keydown', e=>{
+  if(!['ArrowRight','Enter',' '].includes(e.key)) return;
+  e.preventDefault();
+  if(cur === 6) return;
+  if(cur < TOTAL) goTo(cur+1);
+});
+
+/* ── AUDIO ── */
+let aud = false;
+function startAud(){
+  if(aud) return; aud = true;
+  try{
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return;
+    const ac = new AC(), t = ac.currentTime;
+    [[196,.055],[294,.038],[392,.024],[523,.014]].forEach(([f,v],i)=>{
+      const o=ac.createOscillator(),g=ac.createGain(),lp=ac.createBiquadFilter();
+      o.type='sine'; o.frequency.value=f;
+      lp.type='lowpass'; lp.frequency.value=500;
+      g.gain.setValueAtTime(0,t);
+      g.gain.linearRampToValueAtTime(v, t+2.5+i*.6);
+      o.connect(lp); lp.connect(g); g.connect(ac.destination); o.start();
+    });
+  }catch(e){}
+}
+document.body.addEventListener('click', startAud, {once:true});
+document.body.addEventListener('touchstart', startAud, {once:true});
+
+goTo(1);
+})();
+</script>
+</body>
+</html>
